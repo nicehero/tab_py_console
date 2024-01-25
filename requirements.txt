@@ -1,3 +1,4 @@
+pywin32
 console_ctrl
 async_tkinter_loop
 min2tray
