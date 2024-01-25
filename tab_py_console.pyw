@@ -211,7 +211,8 @@ def wndProc(hwnd, msg, wParam, lParam):
     return 0
 
 def start_drag_event():
-    window_handle = get_window_handle()
+    window_handle = win32gui.GetParent(root.winfo_id())
+    #window_handle = get_window_handle()
     win32gui.SetWindowLong(window_handle, win32con.GWL_WNDPROC, wndProc)
     win32gui.DragAcceptFiles(window_handle, True)
 root.after(100,start_drag_event)
