@@ -5,7 +5,6 @@ from tkinter import ttk
 import subprocess
 from tkinter.scrolledtext import ScrolledText
 import os
-import console_ctrl
 from async_tkinter_loop import async_handler, async_mainloop,get_event_loop,main_loop
 import min2tray
 import win32gui, win32api, win32con
@@ -83,8 +82,10 @@ def add_console(cmd,index,dirname):
 def stop_console(index,isend=False):
     if consoles[index] != None:
         (proc,text,start_button,stop_button,frame) = consoles[index]
-        if proc != None:         
-            console_ctrl.send_ctrl_c(proc.pid)
+        if proc != None:
+            si = subprocess.STARTUPINFO()
+            si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+            subprocess.check_call(['taskkill', '/PID', str(proc.pid)], startupinfo=si)
             consoles[index][0] = None
             if isend == False:
                 stop_button.configure(state=tk.DISABLED)
@@ -118,7 +119,7 @@ async def start_console_async(index):
         cwd=dirname
         )
     consoles[index][0] = proc
-    
+    print(proc.pid)
     async def readpipe(pipe:asyncio.StreamReader,isStdErr):
         buffer = b''
         lastIsR = False
@@ -211,16 +212,19 @@ def wndProc(hwnd, msg, wParam, lParam):
     return 0
 
 def start_drag_event():
+    print(root.winfo_id())
     window_handle = win32gui.GetParent(root.winfo_id())
     #window_handle = get_window_handle()
     win32gui.SetWindowLong(window_handle, win32con.GWL_WNDPROC, wndProc)
     win32gui.DragAcceptFiles(window_handle, True)
-root.after(100,start_drag_event)
-#go main
-loop.run_until_complete(main_loop(root))
-#clear subprocesses
-if icon:
-    icon.stop()
-for i in range(len(consoles)):
-    stop_console(i,True)
+
+if __name__ == "__main__":
+    root.after(100,start_drag_event)
+    #go main
+    loop.run_until_complete(main_loop(root))
+    #clear subprocesses
+    if icon:
+        icon.stop()
+    for i in range(len(consoles)):
+        stop_console(i,True)
 
